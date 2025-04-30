@@ -2,3 +2,5 @@
 /data
 /data.tsv
 /main_test.go
+data.json
+database/database_test.go
