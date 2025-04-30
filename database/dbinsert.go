@@ -53,10 +53,16 @@ func LoadData() {
 
 	for freq, board := range data {
 		fmt.Println("processing: ", freq)
-		if len(string(freq)) < 4 {
-			for i := 0; i < 4-len(string(freq)); i++ {
-				freq = "0" + freq
-			}
+
+		switch len(string(freq)) {
+		case 1:
+			freq = "000" + freq
+		case 2:
+			freq = "00" + freq
+		case 3:
+			freq = "0" + freq
+		default:
+			continue
 		}
 		notation := strings.Split(board, "/")
 		top := notation[0]
