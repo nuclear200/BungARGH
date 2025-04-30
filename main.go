@@ -2,94 +2,116 @@ package main
 
 import (
 	"BungieARG/database"
-	"encoding/csv"
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 )
 
+type Coord struct {
+	X, Y int
+}
+
 func main() {
+
 	database.InitDB()
-	// Open the TSV file
-	file, err := os.Open("data.tsv")
-	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return
-	}
-	defer file.Close()
-
-	// Create a new CSV reader with Tab as the delimiter
-	reader := csv.NewReader(file)
-	reader.Comma = '\t'         // Set the delimiter to tab
-	reader.FieldsPerRecord = -1 // Allow variable number of fields per record
-
-	// Read all records
-	records, err := reader.ReadAll()
-	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return
-	}
-
-	// Print the records
-	for _, record := range records {
-		var top, bottom, left, right, center string = "", "", "", "", ""
-		var qr bool
-		freq := record[1]
-		board := record[2]
-		color := record[3]
-		code, _ := strconv.Atoi(record[4])
-		if code == 0 {
-			qr = true
-		} else {
-			qr = false
-		}
-		perimeter := strings.Split(board, ",")
-		for i := 0; i < 8; i++ {
-
-			top = top + perimeter[i]
-			bottom = bottom + perimeter[56+i]
-		}
-		for j := 0; j < 8; j++ {
-			left = left + perimeter[j*8]
-			right = right + perimeter[7+j*8]
-		}
-		center = perimeter[27] + perimeter[28] + perimeter[35] + perimeter[36]
-		if center == "" {
-			center = " "
-		}
-		database.Insert(freq, top, bottom, left, right, center, color, qr)
+	if os.Args[1] == "data" {
+		database.LoadData()
+	} else {
+		Scout(os.Args[1])
 	}
 
 }
 
-func Extrapolate() {
-	edge := "RwRwRwRwRwRwRwRw"
-	database.SearchDB(edge)
-}
+func Scout(startingFreq string) {
+	limiter := "RRRRRRRR"
 
-func plot() [][][]string {
-	var board [64][10][10]string
-	for i := 0; i < 10; i++ {
-		board[0][0][i] = "#"
-		board[0][9][i] = "#"
-		board[0][i][0] = "#"
-		board[0][i][9] = "#"
+	visited := make(map[string]bool)
+	queue := []string{startingFreq}
 
-	}
-	for j := 1; j < 9; j++ {
-		for l := 1; l < 9; l++ {
-			board[0][j][l] = " "
+	positions := make(map[string]Coord)
+
+	positions[startingFreq] = Coord{X: 0, Y: 0}
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		if visited[current] {
+			continue
+		}
+
+		visited[current] = true
+		pos := positions[current]
+
+		// Get directions (not freqs yet)
+		Top, Bottom, Left, Right := database.FetchRelations(current)
+
+		// Map of directions to handlers
+		dirs := map[string]struct {
+			offsetX, offsetY int
+			fetchFunc        func(string) string
+		}{
+			Top:    {0, -1, database.FetchFreqTop},
+			Bottom: {0, 1, database.FetchFreqBottom},
+			Left:   {-1, 0, database.FetchFreqLeft},
+			Right:  {1, 0, database.FetchFreqRight},
+		}
+
+		for dir, meta := range dirs {
+			if dir != "" && dir != limiter {
+				nextFreq := meta.fetchFunc(dir)
+				if nextFreq != "" && !visited[nextFreq] {
+					positions[nextFreq] = Coord{pos.X + meta.offsetX, pos.Y + meta.offsetY}
+					queue = append(queue, nextFreq)
+				}
+			}
 		}
 	}
 
-	return board
+	printMap(positions)
 }
 
-func arrPrint(data [][][]string) {
-	for _, board := range data {
-		for _, row := range board {
-			fmt.Printf("%s", strings.Join(row, ""))
+func printMap(positions map[string]Coord) {
+	// Find min/max bounds
+	minX, maxX := 0, 0
+	minY, maxY := 0, 0
+
+	for _, pos := range positions {
+		if pos.X < minX {
+			minX = pos.X
 		}
+		if pos.X > maxX {
+			maxX = pos.X
+		}
+		if pos.Y < minY {
+			minY = pos.Y
+		}
+		if pos.Y > maxY {
+			maxY = pos.Y
+		}
+	}
+
+	// Invert Y for top-down printing
+	grid := make(map[int]map[int]string)
+	for freq, pos := range positions {
+		if _, exists := grid[pos.Y]; !exists {
+			grid[pos.Y] = make(map[int]string)
+		}
+		grid[pos.Y][pos.X] = freq
+	}
+
+	// Print grid
+	for y := minY; y <= maxY; y++ {
+		for x := minX; x <= maxX; x++ {
+			if row, exists := grid[y]; exists {
+				if val, ok := row[x]; ok {
+					fmt.Printf("[%s]", val) // shorten for readability
+				} else {
+					fmt.Print("[    ]")
+				}
+			} else {
+				fmt.Print("[    ]")
+			}
+		}
+		fmt.Println()
 	}
 }

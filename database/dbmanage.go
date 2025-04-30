@@ -36,14 +36,13 @@ func InitDB() error {
 		bottom TEXT,
 		left TEXT,
 		right TEXT,
-		middle TEXT,
-		color TEXT NOT NULL,
-		qr BOOLEAN
+		middle TEXT
 	);
 	`)
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	return nil
 }
 
