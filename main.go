@@ -68,6 +68,7 @@ func Scout(startingFreq string) {
 	}
 
 	printMap(positions)
+	printMapPieces(positions)
 }
 
 func printMap(positions map[string]Coord) {
@@ -104,12 +105,69 @@ func printMap(positions map[string]Coord) {
 		for x := minX; x <= maxX; x++ {
 			if row, exists := grid[y]; exists {
 				if val, ok := row[x]; ok {
-					fmt.Printf("[%s]", val) // shorten for readability
+					fmt.Printf("[%s]", val)
 				} else {
 					fmt.Print("[    ]")
 				}
 			} else {
 				fmt.Print("[    ]")
+			}
+		}
+		fmt.Println()
+	}
+}
+
+func printMapPieces(positions map[string]Coord) {
+	// Find min/max bounds
+	minX, maxX := 0, 0
+	minY, maxY := 0, 0
+
+	// Create or open a file
+	file, err := os.Create("output.txt")
+	if err != nil {
+		fmt.Println("Error creating file:", err)
+		return
+	}
+	defer file.Close() // Ensure file is closed when done
+
+	for _, pos := range positions {
+		if pos.X < minX {
+			minX = pos.X
+		}
+		if pos.X > maxX {
+			maxX = pos.X
+		}
+		if pos.Y < minY {
+			minY = pos.Y
+		}
+		if pos.Y > maxY {
+			maxY = pos.Y
+		}
+	}
+
+	// Invert Y for top-down printing
+	grid := make(map[int]map[int]string)
+	for freq, pos := range positions {
+		if _, exists := grid[pos.Y]; !exists {
+			grid[pos.Y] = make(map[int]string)
+		}
+		grid[pos.Y][pos.X] = freq
+	}
+
+	// Print grid
+	for y := minY; y <= maxY; y++ {
+		for x := minX; x <= maxX; x++ {
+			if row, exists := grid[y]; exists {
+				if val, ok := row[x]; ok {
+					piece := database.FetchMidPiece(val)
+					_, err = file.WriteString(fmt.Sprintf("[%s]", piece))
+				} else {
+					_, err = file.WriteString(fmt.Sprint("[    ]"))
+
+				}
+			} else {
+				_, err = file.WriteString(fmt.Sprint("[    ]"))
+
 			}
 		}
 		fmt.Println()
