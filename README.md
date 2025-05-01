@@ -5,3 +5,5 @@ and that u go like "app.exe {freq}" and it plots a map of the freqs with common 
 it needs polish.... but i may be a bit sleep deprived... so it works enough XD
 
 turns out that sleep deprivation is bad, and now i have realized how inefficient this is.... (00.00 cet may 1)
+
+I'll probably at some point start update this thing just as an exercise, but for now we can mark this as abandoned
