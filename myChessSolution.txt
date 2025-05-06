@@ -1,0 +1,27 @@
+1- P E6
+2- R H8
+3- P E5
+4- B F3, P [F4, F5]
+5- N D5, P E6
+6- P F1
+7- P F4, R F8
+8- P B7, {CONV} Q C8
+9-  {DEL} n F6
+10- Q F5, P G4
+11- P [D7, C6, E6]
+12- {CONV} b E4
+13- B E5
+14- K D6, P [B7, F7]
+15- P [D4, E4]
+16- {DEL} P F2, K F2
+17- {DEL} b [C3, F6], B [C3, F6]
+18- N [D3, C4, F5, E6]
+19- {DEL} B E2, R D3
+20- B E8
+21- B E2
+22- N E5
+23- N E3
+24- {DEL} N D5, Q D5, N H3, {CONV} [q D2, r C8]
+25- {DEL} N F5, N [F5, D6, C6], B G6
+26- N [F2, B8, B4], B D5
+27- {CONV} n [F5, D6, C4, E3]
